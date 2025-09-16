@@ -1,40 +1,58 @@
-import { ITask } from "../ITask";
-import {randomUUID} from 'crypto'
+import { ITask, CreateTaskDTO, UpdateTaskDTO } from "../ITask";
+import { randomUUID } from 'crypto';
+import { NotFoundError } from "../errors";
 
-// in memory database just fot the application test purposes
-let tasksStore: ITask[] = []
-
-
-export type CreateTaskType = {
-    name: string
-    description: string
-}
+let tasksStore: ITask[] = [];
 
 export class TasksRepository {
 
-    async create({description, name}: CreateTaskType) {
-        tasksStore.push({
+    async create(data: CreateTaskDTO): Promise<ITask> {
+        const newTask: ITask = {
             id: randomUUID(),
-            description,
-            name
-        })
+            title: data.title,
+            description: data.description || '',
+            completed: false
+        };
+        
+        tasksStore.push(newTask);
+        return newTask;
     }
 
-    async update( data:  Partial<ITask>) {
+    async findAll(): Promise<ITask[]> {
+        return [...tasksStore];
+    }
 
-        if (!data.id) throw 'No Task Id provided'
-       
-        let updated = false
-        for (let i = 0; i < tasksStore.length; i ++) {
-            const current = tasksStore[i]
-            if (data.id === current.id) {
-                tasksStore[i] = {
-                    description: data.description ||  current.description,
-                    name: data.name || current.name,
-                    id: current.id                
-                }
-            }
+    async findById(id: string): Promise<ITask | null> {
+        const task = tasksStore.find(task => task.id === id);
+        return task || null;
+    }
+
+    async update(id: string, data: UpdateTaskDTO): Promise<ITask> {
+        const taskIndex = tasksStore.findIndex(task => task.id === id);
+        
+        if (taskIndex === -1) {
+            throw new NotFoundError(`Task with id ${id} not found`);
         }
 
+        const currentTask = tasksStore[taskIndex];
+        const updatedTask: ITask = {
+            ...currentTask,
+            title: data.title !== undefined ? data.title : currentTask.title,
+            description: data.description !== undefined ? data.description : currentTask.description,
+            completed: data.completed !== undefined ? data.completed : currentTask.completed
+        };
+
+        tasksStore[taskIndex] = updatedTask;
+        return updatedTask;
+    }
+
+    async delete(id: string): Promise<void> {
+        const taskIndex = tasksStore.findIndex(task => task.id === id);
+        
+        if (taskIndex === -1) {
+            throw new NotFoundError(`Task with id ${id} not found`);
+        }
+
+        tasksStore.splice(taskIndex, 1);
     }
 }

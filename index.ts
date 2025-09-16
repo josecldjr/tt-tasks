@@ -1,37 +1,17 @@
 import Express from 'express'
-import { TasksRepository } from './repository/tasks-repository'
 import * as bodyParser from 'body-parser'
- 
+import tasksRoutes from './routes/tasks-routes'
 
 const app = Express()
 app.use(bodyParser.json());
 
-
 app.get('/health', (req, res) => {
-    
     res.send('OK')
 })
 
-
-app.post('/tasks', (req, res) => {
-    
-    try {
-        const payload = req.body // TODO validate and serialize
-        const useCase = new TasksRepository()
-
-        const createdTask = useCase.create(payload)
-        
-        res.json({
-            data: payload,
-            success: true
-        })
-    } catch {
-        res.status(500).json({})
-    }
-})
-
+app.use('/api/v1/tasks', tasksRoutes);
 
 app.listen(3000, () => {
-    console.log('startd')
+    console.log('Server started on port 3000')
 })
 
