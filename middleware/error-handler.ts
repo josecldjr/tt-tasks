@@ -1,8 +1,24 @@
 import { Request, Response, NextFunction } from 'express';
 import { ValidationError, NotFoundError } from '../errors';
 import { UnauthorizedError } from '../usecase/login-use-case';
+import { ZodError } from 'zod';
+import { fromZodError } from 'zod-validation-error';
 
 export const errorHandler = (error: any, req: Request, res: Response, next: NextFunction): void => {
+    if (error instanceof ZodError) {
+        const validationError = fromZodError(error);
+        const details = error.issues.map(issue => ({
+            path: issue.path.join('.'),
+            message: issue.message
+        }));
+        
+        res.status(400).json({ 
+            error: 'Validation failed',
+            details 
+        });
+        return;
+    }
+    
     if (error instanceof ValidationError) {
         res.status(400).json({ error: error.message });
         return;

@@ -1,4 +1,5 @@
-import { ITask, CreateTaskDTO, UpdateTaskDTO } from "../ITask";
+import { ITask } from "../ITask";
+import { CreateTaskDTO, UpdateTaskDTO } from "../validation/schemas/tasks-schemas";
 import { randomUUID } from 'crypto';
 import { NotFoundError } from "../errors";
 
